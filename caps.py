@@ -22,7 +22,7 @@ class Cap(ndb.Model):
         index = search.Index(name = 'caps')
         results = index.search(
             'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist))
-        return cls.get_by_id([result.doc_id for result in results])
+        return cls.get_by_id([long(result.doc_id) for result in results])
 
     def upvote(self):
         self.upvotes += 1
