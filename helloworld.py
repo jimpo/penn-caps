@@ -1,10 +1,12 @@
+import json
+import urllib
 import webapp2
 
-import json
-
+from google.appengine.api import search
 from google.appengine.ext import blobstore
-from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import ndb
+from google.appengine.ext.webapp import blobstore_handlers
+
 
 class Cap(ndb.Model):
     location = ndb.GeoPtProperty(required = True)
@@ -12,9 +14,31 @@ class Cap(ndb.Model):
     downvotes = ndb.IntegerProperty(default = 0, required = True)
     created_at = ndb.DateTimeProperty(auto_now_add = True, required = True)
     viewed_at = ndb.DateTimeProperty()
-    video_length = ndb.FloatProperty()
+    duration = ndb.FloatProperty()
+    video = ndb.BlobKeyProperty()
+    thumbnail = ndb.BlobKeyProperty()
 
-    def as_json(self, **kwargs):
+    @classmethod
+    def query_location(cls, lat, lon, dist):
+        index = search.Index(name = 'caps')
+        results = index.search(
+            'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist))
+        return results
+
+    def index(self):
+        print (self.location.lat, self.location.lon)
+        document = search.Document(
+            doc_id = str(self.key.id()),
+            fields = [
+                search.GeoField(name = 'location',
+                                value = search.GeoPoint(self.location.lat,
+                                                        self.location.lon))
+                ]
+            )
+        index = search.Index(name = 'caps')
+        index.put(document)
+
+    def as_json(self):
         attrs = {
             'id': self.key.id(),
             'location': {
@@ -24,9 +48,27 @@ class Cap(ndb.Model):
             'upvotes': self.upvotes,
             'downvotes': self.downvotes,
             'created_at': self.created_at.isoformat(),
+            'viewed_at': self.viewed_at.isoformat() if self.viewed_at else None,
             }
-        attrs.update(kwargs)
+        if self.video:
+            attrs['video_url'] = '/video/download/%s' % blobstore.BlobInfo(self.video).key()
+        else:
+            attrs['video_url'] = blobstore.create_upload_url('/video/upload/%s' % self.key.id())
+
+        if self.thumbnail:
+            attrs['thumbnail_url'] = '/thumbnail/download/%s' % blobstore.BlobInfo(self.thumbnail).key()
+        else:
+            attrs['thumbnail_url'] = blobstore.create_upload_url('/thumbnail/upload/%s' % self.key.id())
         return attrs
+
+class CapHandler(webapp2.RequestHandler):
+    def headers(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+    def get(self, cap_id):
+        self.headers()
+        cap = Cap.get_by_id(long(cap_id))
+        self.response.write(json.dumps(cap.as_json()))
 
 class CapsHandler(webapp2.RequestHandler):
     def headers(self):
@@ -34,14 +76,12 @@ class CapsHandler(webapp2.RequestHandler):
 
     def get(self):
         self.headers()
-        lat = float(self.request.get('latitude'))
-        lon = float(self.request.get('longitude'))
-        dist = float(self.request.get('range', 10))
-        query = Cap.gql(
-            'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist))
-        results = query.fetch(10)
-        print results
-        self.response.write([result.as_json for result in results])
+        results = Cap.query_location(
+            float(self.request.get('latitude')),
+            float(self.request.get('longitude')),
+            float(self.request.get('range', 10))
+            )
+        self.response.write([result.to_dict() for result in results])
 
     def post(self):
         self.headers()
@@ -54,16 +94,43 @@ class CapsHandler(webapp2.RequestHandler):
             #uploader: data['uploader'],
             )
         cap.put()
-        attrs = cap.as_json(upload_url = blobstore.create_upload_url('/upload'))
-        self.response.write(json.dumps(attrs))
+        cap.index()
 
-class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
-    def post(self):
+        self.response.write(json.dumps(cap.as_json()))
+
+class VideoUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self, cap_id):
         upload_files = self.get_uploads('file')
         blob_info = upload_files[0]
-        self.response.write('Hello World!')
+
+        cap = Cap.get_by_id(long(cap_id))
+        cap.video = blob_info.key()
+        cap.put()
+
+        self.response.set_status(204)
+
+class ThumbnailUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self, cap_id):
+        upload_files = self.get_uploads('file')
+        blob_info = upload_files[0]
+
+        cap = Cap.get_by_id(long(cap_id))
+        cap.thumbnail = blob_info.key()
+        cap.put()
+
+        self.response.set_status(204)
+
+class DownloadHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, resource):
+        resource = str(urllib.unquote(resource))
+        blob_info = blobstore.BlobInfo.get(resource)
+        self.send_blob(blob_info)
 
 application = webapp2.WSGIApplication([
+        ('/caps/(\d+)', CapHandler),
         ('/caps', CapsHandler),
-        ('/upload', UploadHandler),
+        ('/video/upload/(\d+)', VideoUploadHandler),
+        ('/thumbnail/upload/(\d+)', ThumbnailUploadHandler),
+        ('/video/download/([\w=]+)', DownloadHandler),
+        ('/thumbnail/download/([\w=]+)', DownloadHandler),
         ], debug = True)
