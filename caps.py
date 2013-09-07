@@ -22,7 +22,7 @@ class Cap(ndb.Model):
         index = search.Index(name = 'caps')
         results = index.search(
             'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist))
-        return results
+        return cls.get_by_id([result.doc_id for result in results])
 
     def upvote(self):
         self.upvotes += 1
@@ -37,7 +37,6 @@ class Cap(ndb.Model):
         self.put()
 
     def index(self):
-        print (self.location.lat, self.location.lon)
         document = search.Document(
             doc_id = str(self.key.id()),
             fields = [
@@ -98,7 +97,8 @@ class CapsHandler(webapp2.RequestHandler):
             float(self.request.get('longitude')),
             float(self.request.get('range', 10))
             )
-        self.response.write([result.to_dict() for result in results])
+        return self.response.write(
+            json.dumps([result.as_json() for result in results]))
 
     def post(self):
         self.headers()
