@@ -20,9 +20,13 @@ class Cap(ndb.Model):
     @classmethod
     def query_location(cls, lat, lon, dist):
         index = search.Index(name = 'caps')
-        results = index.search(
-            'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist))
-        return cls.get_by_id([long(result.doc_id) for result in results])
+        query = search.Query(
+            query_string = 'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist),
+            options = search.QueryOptions(ids_only = True)
+            )
+        results = index.search(query)
+        keys = [ndb.Key(Cap, long(result.doc_id)) for result in results]
+        return Cap.query(Cap.key.IN(keys)).fetch() if keys else []
 
     def upvote(self):
         self.upvotes += 1
