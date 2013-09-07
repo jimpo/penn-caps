@@ -5,5 +5,7 @@ api_version: 1
 threadsafe: true
 
 handlers:
+  - url: /caps.*
+    script: caps.application
   - url: /.*
-    script: helloworld.application
+    script: filestore.application
