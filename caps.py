@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import webapp2
 
 from google.appengine.api import search
@@ -106,6 +107,7 @@ class CapsHandler(webapp2.RequestHandler):
 
     def post(self):
         self.headers()
+        logging.debug(self.request.body)
         data = json.loads(self.request.body)
         cap = Cap(
             location = ndb.GeoPt(
