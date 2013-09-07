@@ -1,3 +1,4 @@
+import datetime
 import json
 import webapp2
 
@@ -22,6 +23,18 @@ class Cap(ndb.Model):
         results = index.search(
             'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist))
         return results
+
+    def upvote(self):
+        self.upvotes += 1
+        self.put()
+
+    def downvote(self):
+        self.downvotes += 1
+        self.put()
+
+    def view(self):
+        self.viewed_at = datetime.datetime.now()
+        self.put()
 
     def index(self):
         print (self.location.lat, self.location.lon)
@@ -68,6 +81,12 @@ class CapHandler(webapp2.RequestHandler):
         cap = Cap.get_by_id(long(cap_id))
         self.response.write(json.dumps(cap.as_json()))
 
+class CapActionHandler(webapp2.RequestHandler):
+    def post(self, cap_id, action):
+        cap = Cap.get_by_id(long(cap_id))
+        getattr(cap, action)()
+        self.response.set_status(204)
+
 class CapsHandler(webapp2.RequestHandler):
     def headers(self):
         self.response.headers['Content-Type'] = 'application/json'
@@ -98,5 +117,6 @@ class CapsHandler(webapp2.RequestHandler):
 
 application = webapp2.WSGIApplication([
         ('/caps/(\d+)', CapHandler),
+        ('/caps/(\d+)/(\w+)', CapActionHandler),
         ('/caps', CapsHandler),
         ], debug = True)
