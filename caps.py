@@ -9,7 +9,7 @@ from google.appengine.ext import ndb
 
 
 class Cap(ndb.Model):
-    uploader = ndb.IntegerProperty(required = True)
+    uploader = ndb.StringProperty(required = True)
     location = ndb.GeoPtProperty(required = True)
     upvotes = ndb.IntegerProperty(default = 0, required = True)
     downvotes = ndb.IntegerProperty(default = 0, required = True)
@@ -115,7 +115,7 @@ class CapsHandler(webapp2.RequestHandler):
                 data['location']['longitude']
                 ),
             uploader = data['uploader'],
-            duration = data['duration'],
+            duration = float(data['duration']),
             )
         cap.put()
         cap.index()
