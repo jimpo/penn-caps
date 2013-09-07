@@ -113,7 +113,8 @@ class CapsHandler(webapp2.RequestHandler):
                 data['location']['latitude'],
                 data['location']['longitude']
                 ),
-            #uploader: data['uploader'],
+            uploader: data['uploader'],
+            duration: data['duration'],
             )
         cap.put()
         cap.index()
