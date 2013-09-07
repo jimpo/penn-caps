@@ -26,5 +26,5 @@ class DownloadHandler(blobstore_handlers.BlobstoreDownloadHandler):
 
 application = webapp2.WSGIApplication([
         ('/(thumbnail|video)/upload/(\d+)', UploadHandler),
-        ('/(thumbnail|video)/download/([\w=]+)', DownloadHandler),
+        ('/(thumbnail|video)/download/([^/]+)', DownloadHandler),
         ], debug = True)

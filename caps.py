@@ -107,7 +107,6 @@ class CapsHandler(webapp2.RequestHandler):
 
     def post(self):
         self.headers()
-        logging.info(self.request.body)
         data = json.loads(self.request.body)
         cap = Cap(
             location = ndb.GeoPt(
