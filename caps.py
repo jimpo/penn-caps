@@ -9,12 +9,13 @@ from google.appengine.ext import ndb
 
 
 class Cap(ndb.Model):
+    uploader = ndb.IntegerProperty(required = True)
     location = ndb.GeoPtProperty(required = True)
     upvotes = ndb.IntegerProperty(default = 0, required = True)
     downvotes = ndb.IntegerProperty(default = 0, required = True)
     created_at = ndb.DateTimeProperty(auto_now_add = True, required = True)
     viewed_at = ndb.DateTimeProperty()
-    duration = ndb.FloatProperty()
+    duration = ndb.FloatProperty(required = True)
     video = ndb.BlobKeyProperty()
     thumbnail = ndb.BlobKeyProperty()
 
