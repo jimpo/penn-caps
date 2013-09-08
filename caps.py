@@ -24,6 +24,7 @@ class Cap(ndb.Model):
     duration = ndb.FloatProperty(required = True)
     video = ndb.BlobKeyProperty()
     thumbnail = ndb.BlobKeyProperty()
+    view_count = ndb.IntegerProperty(default = 0, required = True)
 
     @classmethod
     def query_location(cls, lat, lon, dist):
@@ -54,6 +55,7 @@ class Cap(ndb.Model):
 
     def view(self):
         self.viewed_at = datetime.datetime.now()
+        self.view_count += 1
         self.put()
 
     def index(self):
@@ -79,7 +81,8 @@ class Cap(ndb.Model):
             'downvotes': self.downvotes,
             'created_at': self.created_at.isoformat(),
             'viewed_at': self.viewed_at.isoformat() if self.viewed_at else None,
-            'uploader': self.uploader
+            'uploader': self.uploader,
+            'view_count': self.view_count,
             }
         if self.video:
             attrs['video_url'] = '/video/download/%s' % blobstore.BlobInfo(self.video).key()
