@@ -73,12 +73,16 @@ class Cap(ndb.Model):
 
     def publish(self, access_token):
         conn = httplib.HTTPSConnection('graph.facebook.com')
+        logging.info('hi')
         conn.request(
             'POST',
             "/%s/penn-caps:drop?access_token=%s&cap=http://penncaps.appspot.com"
-            "/caps/%s" % (self.uploader, access_token, self.key.id())
+            "/caps/%s" % (
+                self.uploader, access_token, self.key.id()
+                )
             )
         logging.info(conn.getresponse().status)
+        logging.info(conn.getresponse().read())
 
     def index(self):
         document = search.Document(
@@ -175,6 +179,7 @@ class CapsHandler(webapp2.RequestHandler):
                 ),
             uploader = data['uploader'],
             duration = float(data['duration']),
+            tagged = data['tagged'],
             )
         cap.put()
         cap.index()
