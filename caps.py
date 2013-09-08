@@ -96,7 +96,7 @@ class CapHandler(webapp2.RequestHandler):
             template_values = {
                 'og_tags': {
                     'fb:app_id': '162060517324785',
-                    'og:url': 'http://pennapps.appspot.com/caps/%s' % cap.key.id(),
+                    'og:url': 'http://penncaps.appspot.com/caps/%s' % cap.key.id(),
                     'og:title': 'A Cap',
                     'place:location:latitude': cap.location.lat,
                     'place:location:longitude': cap.location.lon,
