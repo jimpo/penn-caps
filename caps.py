@@ -39,8 +39,8 @@ class Cap(ndb.Model):
                 sort_options = search.SortOptions(
                     expressions = [
                         search.SortExpression(
-                            expression = '5 * (upvotes - downvotes) - view_count',
-                            direction = search.SortExpression.DESCENDING
+                            expression = 'upvotes - downvotes',
+                            direction = search.SortExpression.DESCENDING,
                             ),
                         ]
                     )
