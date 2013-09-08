@@ -64,6 +64,7 @@ class Cap(ndb.Model):
             'downvotes': self.downvotes,
             'created_at': self.created_at.isoformat(),
             'viewed_at': self.viewed_at.isoformat() if self.viewed_at else None,
+            'uploader': self.uploader
             }
         if self.video:
             attrs['video_url'] = '/video/download/%s' % blobstore.BlobInfo(self.video).key()
