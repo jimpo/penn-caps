@@ -1,4 +1,5 @@
 import datetime
+import httplib
 import jinja2
 import json
 import logging
@@ -25,6 +26,7 @@ class Cap(ndb.Model):
     video = ndb.BlobKeyProperty()
     thumbnail = ndb.BlobKeyProperty()
     view_count = ndb.IntegerProperty(default = 0, required = True)
+    tagged = ndb.StringProperty(repeated = True)
 
     @classmethod
     def query_location(cls, lat, lon, dist):
@@ -57,6 +59,15 @@ class Cap(ndb.Model):
         self.viewed_at = datetime.datetime.now()
         self.view_count += 1
         self.put()
+
+    def publish(self, access_token):
+        conn = httplib.HTTPSConnection('graph.facebook.com')
+        conn.request(
+            'POST',
+            "/%s/penn-caps:drop?access_token=%s&cap=http://penncaps.appspot.com"
+            "/caps/%s" % (self.uploader, access_token, self.key.id())
+            )
+        logger.info(conn.getresponse().status)
 
     def index(self):
         document = search.Document(
@@ -156,6 +167,8 @@ class CapsHandler(webapp2.RequestHandler):
             )
         cap.put()
         cap.index()
+        if self.request.get('access_token'):
+            cap.publish(self.request.get('access_token'))
 
         self.response.write(json.dumps(cap.as_json()))
 
