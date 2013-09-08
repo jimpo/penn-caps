@@ -106,7 +106,7 @@ class CapHandler(webapp2.RequestHandler):
                     'fb:app_id': '162060517324785',
                     'og:url': 'http://penncaps.appspot.com/caps/%s' % cap.key.id(),
                     'og:title': 'A Cap',
-                    'og:type': 'cap',
+                    'og:type': 'penn-caps:cap',
                     'place:location:latitude': cap.location.lat,
                     'place:location:longitude': cap.location.lon,
                     }
