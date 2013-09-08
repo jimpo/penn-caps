@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head prefix="og: http://ogp.me/ns# product: http://ogp.me/ns/product#">
+    {% for property, content in og_tags.iteritems() %}
+    <meta property="{{ property }}" content="{{ content }}">
+    {% endfor %}
+  </head>
+</html>
+{% endautoescape %}

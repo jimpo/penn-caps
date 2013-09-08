@@ -1,11 +1,17 @@
 import datetime
+import jinja2
 import json
 import logging
+import os
 import webapp2
 
 from google.appengine.api import search
 from google.appengine.ext import blobstore
 from google.appengine.ext import ndb
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'])
 
 
 class Cap(ndb.Model):
@@ -82,9 +88,22 @@ class CapHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
 
     def get(self, cap_id):
-        self.headers()
         cap = Cap.get_by_id(long(cap_id))
-        self.response.write(json.dumps(cap.as_json()))
+        if self.request.headers.get('CONTENT_TYPE', None) == 'application/json':
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps(cap.as_json()))
+        else:
+            template_values = {
+                'og_tags': {
+                    'fb:app_id': '162060517324785',
+                    'og:url': 'http://pennapps.appspot.com/caps/%s' % cap.key.id(),
+                    'og:title': 'A Cap',
+                    'place:location:latitude': cap.location.lat,
+                    'place:location:longitude': cap.location.lon,
+                    }
+                }
+            template = JINJA_ENVIRONMENT.get_template('cap.html')
+            self.response.write(template.render(template_values))
 
 class CapActionHandler(webapp2.RequestHandler):
     def post(self, cap_id, action):

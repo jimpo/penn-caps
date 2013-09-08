@@ -9,3 +9,10 @@ handlers:
     script: caps.application
   - url: /.*
     script: filestore.application
+
+
+libraries:
+  - name: webapp2
+    version: latest
+  - name: jinja2
+    version: latest
