@@ -133,7 +133,7 @@ class CapsHandler(webapp2.RequestHandler):
         results = Cap.query_location(
             float(self.request.get('latitude')),
             float(self.request.get('longitude')),
-            float(self.request.get('range', 10))
+            float(self.request.get('range', 50))
             )
         return self.response.write(
             json.dumps([result.as_json() for result in results]))
