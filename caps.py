@@ -179,8 +179,9 @@ class CapsHandler(webapp2.RequestHandler):
                 ),
             uploader = data['uploader'],
             duration = float(data['duration']),
-            tagged = data['tagged'],
             )
+        if 'tagged' in data:
+            cap.tagged = data['tagged']
         cap.put()
         cap.index()
         if self.request.get('access_token'):
