@@ -78,7 +78,7 @@ class Cap(ndb.Model):
             "/%s/penn-caps:drop?access_token=%s&cap=http://penncaps.appspot.com"
             "/caps/%s" % (self.uploader, access_token, self.key.id())
             )
-        logger.info(conn.getresponse().status)
+        logging.info(conn.getresponse().status)
 
     def index(self):
         document = search.Document(
