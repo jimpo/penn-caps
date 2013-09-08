@@ -44,6 +44,14 @@ class Cap(ndb.Model):
         self.downvotes += 1
         self.put()
 
+    def x_upvote(self):
+        self.upvotes -= 1
+        self.put()
+
+    def x_downvote(self):
+        self.downvotes -= 1
+        self.put()
+
     def view(self):
         self.viewed_at = datetime.datetime.now()
         self.put()
@@ -109,6 +117,11 @@ class CapActionHandler(webapp2.RequestHandler):
     def post(self, cap_id, action):
         cap = Cap.get_by_id(long(cap_id))
         getattr(cap, action)()
+        self.response.set_status(204)
+
+    def delete(self, cap_id, action):
+        cap = Cap.get_by_id(long(cap_id))
+        getattr(cap, 'x_' + action)()
         self.response.set_status(204)
 
 class CapsHandler(webapp2.RequestHandler):
