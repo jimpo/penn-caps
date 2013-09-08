@@ -33,7 +33,15 @@ class Cap(ndb.Model):
         index = search.Index(name = 'caps')
         query = search.Query(
             query_string = 'distance(location, geopoint(%f, %f)) < %f' % (lat, lon, dist),
-            options = search.QueryOptions(ids_only = True)
+            options = search.QueryOptions(
+                ids_only = True,
+                limit = 30,
+                sort_options = search.SortOptions(
+                    expressions = [
+                        search.SortExpression('5 * (upvotes - downvotes) - views'),
+                        ]
+                    )
+                )
             )
         results = index.search(query)
         keys = [ndb.Key(Cap, long(result.doc_id)) for result in results]
